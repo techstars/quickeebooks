@@ -164,32 +164,11 @@ module Quickeebooks
           when 401
             raise AuthorizationFailure
           when 400, 500
-            err = parse_xml(response.body)
-            raise Quickeebooks::Common::IntuitRequestException.new(err[:message], err[:code], err[:cause])
+            raise Quickeebooks::Common::IntuitRequestException.from_parsed_xml(parse_xml(response.body))
           else
             raise "HTTP Error Code: #{status}, Msg: #{response.body}"
           end
         end
-
-        def parse_intuit_error(body)
-          xml = parse_xml(body)
-          error = {:message => "", :code => 0, :cause => ""}
-          fault = xml.xpath("//xmlns:FaultInfo/xmlns:Message")[0]
-          if fault
-            error[:message] = fault.text
-          end
-          error_code = xml.xpath("//xmlns:FaultInfo/xmlns:ErrorCode")[0]
-          if error_code
-            error[:code] = error_code.text
-          end
-          error_cause = xml.xpath("//xmlns:FaultInfo/xmlns:Cause")[0]
-          if error_cause
-            error[:cause] = error_cause.text
-          end
-
-          error
-        end
-
       end
     end
   end

@@ -2,14 +2,7 @@ require 'rexml/document'
 require 'uri'
 require 'cgi'
 require 'quickeebooks/common/logging'
-
-class IntuitRequestException < Exception
-  attr_accessor :code, :cause
-  def initialize(msg)
-    super(msg)
-  end
-end
-class AuthorizationFailure < Exception; end
+require 'quickeebooks/common/exception'
 
 module Quickeebooks
   module Online
@@ -119,7 +112,7 @@ module Quickeebooks
               collection.entries = results
               collection.current_page = xml.xpath("//qbo:SearchResults/qbo:CurrentPage")[0].text.to_i
             rescue => ex
-              raise IntuitRequestException.new("Error parsing XML: #{ex.message}")
+              raise Quickeebooks::Common::IntuitRequestException.new("Error parsing XML: #{ex.message}")
             end
             collection
           else
@@ -172,7 +165,7 @@ module Quickeebooks
             raise AuthorizationFailure
           when 400, 500
             err = parse_intuit_error(response.body)
-            ex = IntuitRequestException.new(err[:message])
+            ex = Quickeebooks::Common::IntuitRequestException.new(err[:message])
             ex.code = err[:code]
             ex.cause = err[:cause]
             raise ex

@@ -2,14 +2,7 @@ require 'rexml/document'
 require 'uri'
 require 'cgi'
 require 'quickeebooks/common/logging'
-
-class IntuitRequestException < Exception
-  attr_accessor :code, :cause
-  def initialize(msg)
-    super(msg)
-  end
-end
-class AuthorizationFailure < Exception; end
+require 'quickeebooks/common/exception'
 
 module Quickeebooks
   module Windows
@@ -143,7 +136,7 @@ module Quickeebooks
               collection.current_page = 1 # TODO: fix this
             rescue => ex
               #log("Error parsing XML: #{ex.message}")
-              raise IntuitRequestException.new("Error parsing XML: #{ex.message}")
+              raise Quickeebooks::Common::IntuitRequestException.new("Error parsing XML: #{ex.message}")
             end
             collection
           else
@@ -164,9 +157,9 @@ module Quickeebooks
             when 200
               result = Quickeebooks::Windows::Model::RestResponse.from_xml(response.body)
             when 401
-              raise IntuitRequestException.new("Authorization failure: token timed out?")
+              raise Quickeebooks::Common::IntuitRequestException.new("Authorization failure: token timed out?")
             when 404
-              raise IntuitRequestException.new("Resource Not Found: Check URL and try again")
+              raise Quickeebooks::Common::IntuitRequestException.new("Resource Not Found: Check URL and try again")
             end
           end
           result
@@ -232,7 +225,7 @@ module Quickeebooks
 
         def parse_and_raise_exception
           err = parse_intuit_error
-          ex = IntuitRequestException.new(err[:message])
+          ex = Quickeebooks::Common::IntuitRequestException.new(err[:message])
           ex.code = err[:code]
           ex.cause = err[:cause]
           raise ex

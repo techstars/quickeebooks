@@ -10,6 +10,12 @@ describe Quickeebooks::Common::IntuitRequestException, focus:true do
       its(:cause) { should eq "SERVER" }
     end
 
-  end
+    context "From Status report HTML" do
+      let(:parsed_xml) { Nokogiri::XML(sharedFixture("status_report_no_destination_found.html")) }
 
+      its(:code) { should eq 400 }
+      its(:message) { should eq "No destination found for given partition key" }
+      its(:cause) { should eq "The request sent by the client was syntactically incorrect (message=No destination found for given partition key; errorCode=007001; statusCode=400)." }
+    end
+  end
 end

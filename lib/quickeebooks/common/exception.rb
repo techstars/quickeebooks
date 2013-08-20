@@ -9,7 +9,12 @@ module Quickeebooks
       end
 
       def self.from_parsed_xml(xml)
-        error = parse_base_exception_model(xml)
+
+        error = if !xml.namespaces.empty?
+          parse_base_exception_model(xml)
+        else
+          parse_status_report_html(xml)
+        end
 
         new(error[:message], error[:code], error[:cause])
       end
@@ -34,6 +39,21 @@ module Quickeebooks
         error
       end
 
+      def self.parse_status_report_html(xml)
+        value_hash, description = xml.css("u").collect{|t| t.text }
+
+        values = value_hash.split("; ").inject({}) do |memo, pair|
+          key, value = pair.split("=")
+          memo[key.to_sym] = value
+          memo
+        end
+
+        {
+          :message => values[:message],
+          :code => values[:statusCode],
+          :cause => description
+        }
+      end
     end
 
     class AuthorizationFailure < Exception; end

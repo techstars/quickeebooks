@@ -225,10 +225,7 @@ module Quickeebooks
 
         def parse_and_raise_exception
           err = parse_intuit_error
-          ex = Quickeebooks::Common::IntuitRequestException.new(err[:message])
-          ex.code = err[:code]
-          ex.cause = err[:cause]
-          raise ex
+          raise Quickeebooks::Common::IntuitRequestException.new(err[:message], err[:code], err[:cause])
         end
 
         def response_is_error?

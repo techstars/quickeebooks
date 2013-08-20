@@ -164,11 +164,8 @@ module Quickeebooks
           when 401
             raise AuthorizationFailure
           when 400, 500
-            err = parse_intuit_error(response.body)
-            ex = Quickeebooks::Common::IntuitRequestException.new(err[:message])
-            ex.code = err[:code]
-            ex.cause = err[:cause]
-            raise ex
+            err = parse_xml(response.body)
+            raise Quickeebooks::Common::IntuitRequestException.new(err[:message], err[:code], err[:cause])
           else
             raise "HTTP Error Code: #{status}, Msg: #{response.body}"
           end

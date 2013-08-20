@@ -1,8 +1,10 @@
 module Quickeebooks
   module Common
     class IntuitRequestException < Exception
-      attr_accessor :code, :cause
-      def initialize(msg)
+      attr_reader :code, :cause
+      def initialize(msg, code=0, cause="")
+        @code  = code.to_i
+        @cause = cause
         super(msg)
       end
     end

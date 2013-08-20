@@ -164,7 +164,7 @@ module Quickeebooks
           when 401
             raise AuthorizationFailure
           when 400, 500
-            raise Quickeebooks::Common::IntuitRequestException.from_parsed_xml(parse_xml(response.body))
+            Quickbooks::Common::RaiseError.from_response(parse_xml(response.body))
           else
             raise "HTTP Error Code: #{status}, Msg: #{response.body}"
           end

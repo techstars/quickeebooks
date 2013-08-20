@@ -1,5 +1,19 @@
 module Quickeebooks
   module Common
+
+    class RaiseError
+      def self.from_response(xml)
+
+        error = if !xml.namespaces.empty?
+          IntuitRequestException.from_parsed_xml(xml)
+        else
+          StatusReportException.from_parsed_xml(xml)
+        end
+
+        raise error
+      end
+    end
+
     class IntuitRequestException < Exception
       attr_reader :code, :cause
       def initialize(msg, code=0, cause="")
@@ -9,18 +23,6 @@ module Quickeebooks
       end
 
       def self.from_parsed_xml(xml)
-
-        error = if !xml.namespaces.empty?
-          parse_base_exception_model(xml)
-        else
-          parse_status_report_html(xml)
-        end
-
-        new(error[:message], error[:code], error[:cause])
-      end
-
-    private
-      def self.parse_base_exception_model(xml)
         error = {:message => "", :code => 0, :cause => ""}
 
         fault = xml.xpath("//xmlns:FaultInfo/xmlns:Message")[0]
@@ -36,10 +38,23 @@ module Quickeebooks
           error[:cause] = error_cause.text
         end
 
-        error
+        new(error[:message], error[:code], error[:cause])
       end
+    end
 
-      def self.parse_status_report_html(xml)
+    class StatusReportException < Exception
+      attr_reader :error_code, :status_code, :cause
+
+      def initialize(msg, error_code=0, status_code=0, cause="")
+        @error_code  = error_code
+        @status_code = status_code.to_i
+        @cause = cause
+
+        super(msg)
+      end
+      alias :code :status_code
+
+      def self.from_parsed_xml(xml)
         value_hash, description = xml.css("u").collect{|t| t.text }
 
         values = value_hash.split("; ").inject({}) do |memo, pair|
@@ -48,11 +63,7 @@ module Quickeebooks
           memo
         end
 
-        {
-          :message => values[:message],
-          :code => values[:statusCode],
-          :cause => description
-        }
+        new(values[:message], values[:errorCode], values[:statusCode], description)
       end
     end
 

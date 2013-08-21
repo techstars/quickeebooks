@@ -2,14 +2,7 @@ require 'rexml/document'
 require 'uri'
 require 'cgi'
 require 'quickeebooks/common/logging'
-
-class IntuitRequestException < Exception
-  attr_accessor :code, :cause
-  def initialize(msg)
-    super(msg)
-  end
-end
-class AuthorizationFailure < Exception; end
+require 'quickeebooks/common/exception'
 
 module Quickeebooks
   module Online
@@ -119,7 +112,7 @@ module Quickeebooks
               collection.entries = results
               collection.current_page = xml.xpath("//qbo:SearchResults/qbo:CurrentPage")[0].text.to_i
             rescue => ex
-              raise IntuitRequestException.new("Error parsing XML: #{ex.message}")
+              raise Quickeebooks::Common::IntuitRequestException.new("Error parsing XML: #{ex.message}")
             end
             collection
           else
@@ -163,6 +156,7 @@ module Quickeebooks
           log "RESPONSE CODE = #{response.code}"
           log "RESPONSE BODY = #{response.body}"
           status = response.code.to_i
+
           case status
           when 200
             response
@@ -171,11 +165,7 @@ module Quickeebooks
           when 401
             raise AuthorizationFailure
           when 400, 500
-            err = parse_intuit_error(response.body)
-            ex = IntuitRequestException.new(err[:message])
-            ex.code = err[:code]
-            ex.cause = err[:cause]
-            raise ex
+            raise parse_intuit_error(response.body)
           else
             raise "HTTP Error Code: #{status}, Msg: #{response.body}"
           end
@@ -183,23 +173,12 @@ module Quickeebooks
 
         def parse_intuit_error(body)
           xml = parse_xml(body)
-          error = {:message => "", :code => 0, :cause => ""}
-          fault = xml.xpath("//xmlns:FaultInfo/xmlns:Message")[0]
-          if fault
-            error[:message] = fault.text
+          error = if !xml.namespaces.empty?
+            Quickeebooks::Common::IntuitRequestException.from_parsed_xml(xml)
+          else
+            Quickeebooks::Common::StatusReportException.from_parsed_xml(xml)
           end
-          error_code = xml.xpath("//xmlns:FaultInfo/xmlns:ErrorCode")[0]
-          if error_code
-            error[:code] = error_code.text
-          end
-          error_cause = xml.xpath("//xmlns:FaultInfo/xmlns:Cause")[0]
-          if error_cause
-            error[:cause] = error_cause.text
-          end
-
-          error
         end
-
       end
     end
   end

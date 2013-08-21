@@ -24,7 +24,7 @@ describe "Quickeebooks::Online::Service::Account" do
     uri = "https://qbo.intuit.com/invalid"
     url = @service.url_for_resource(Quickeebooks::Online::Model::Account.resource_for_collection)
     FakeWeb.register_uri(:post, url, :status => ["200", "OK"], :body => "blah")
-    lambda { @service.list }.should raise_error(IntuitRequestException)
+    lambda { @service.list }.should raise_error(Quickeebooks::Common::IntuitRequestException)
   end
 
   it "can fetch a list of accounts" do

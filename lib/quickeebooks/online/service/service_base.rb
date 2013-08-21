@@ -156,6 +156,7 @@ module Quickeebooks
           log "RESPONSE CODE = #{response.code}"
           log "RESPONSE BODY = #{response.body}"
           status = response.code.to_i
+
           case status
           when 200
             response
@@ -164,9 +165,18 @@ module Quickeebooks
           when 401
             raise AuthorizationFailure
           when 400, 500
-            Quickbooks::Common::RaiseError.from_response(parse_xml(response.body))
+            raise parse_intuit_error(response.body)
           else
             raise "HTTP Error Code: #{status}, Msg: #{response.body}"
+          end
+        end
+
+        def parse_intuit_error(body)
+          xml = parse_xml(body)
+          error = if !xml.namespaces.empty?
+            Quickeebooks::Common::IntuitRequestException.from_parsed_xml(xml)
+          else
+            Quickeebooks::Common::StatusReportException.from_parsed_xml(xml)
           end
         end
       end

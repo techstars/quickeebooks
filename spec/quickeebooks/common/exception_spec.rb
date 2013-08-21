@@ -37,22 +37,3 @@ describe Quickeebooks::Common::StatusReportException do
     end
   end
 end
-
-
-describe Quickeebooks::Common::RaiseError do
-  describe '#for_response' do
-    subject { described_class.from_response(parsed_xml) }
-
-    context "From Base Exception Model XML" do
-      let(:parsed_xml) { Nokogiri::XML(sharedFixture("internal_server_error.xml")) }
-
-      it { expect { subject }.to raise_error Quickeebooks::Common::IntuitRequestException }
-    end
-
-    context "From Status report HTML" do
-      let(:parsed_xml) { Nokogiri::XML(sharedFixture("status_report_no_destination_found.html")) }
-
-      it { expect { subject }.to raise_error Quickeebooks::Common::StatusReportException }
-    end
-  end
-end

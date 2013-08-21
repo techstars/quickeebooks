@@ -1,19 +1,5 @@
 module Quickeebooks
   module Common
-
-    class RaiseError
-      def self.from_response(xml)
-
-        error = if !xml.namespaces.empty?
-          IntuitRequestException.from_parsed_xml(xml)
-        else
-          StatusReportException.from_parsed_xml(xml)
-        end
-
-        raise error
-      end
-    end
-
     class IntuitRequestException < Exception
       attr_reader :code, :cause
       def initialize(msg, code=0, cause="")

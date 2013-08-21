@@ -147,4 +147,20 @@ describe "Quickeebooks::Online::Service::ServiceBase" do
       @service.send(:fetch_collection, @model, nil, 1, 20, sorter)
     end
   end
+
+  describe '#check_response' do
+    subject { @service.send(:check_response, response) }
+
+    context "From Base Exception Model XML" do
+      let(:response) { double("Net::HTTPResponse", code:500, body: sharedFixture("internal_server_error.xml")) }
+
+      it { expect { subject }.to raise_error Quickeebooks::Common::IntuitRequestException }
+    end
+
+    context "From Status report HTML" do
+      let(:response) { double("Net::HTTPResponse", code:400, body: sharedFixture("status_report_no_destination_found.html")) }
+
+      it { expect { subject }.to raise_error Quickeebooks::Common::StatusReportException }
+    end
+  end
 end

@@ -18,7 +18,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'oauth'
   gem.add_dependency 'nokogiri', '~> 1.6.0'
   gem.add_dependency 'activemodel'
-  gem.add_dependency 'json', '~> 1.7.7'
+  gem.add_dependency 'json', '~> 1.8'
 
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'simplecov'
